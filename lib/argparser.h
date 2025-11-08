@@ -58,8 +58,6 @@ struct PosArgument {
   } valid_func;
 
   const char *valid_comment;
-
-  bool parsed;
 };
 
 struct ArgumentParser {
