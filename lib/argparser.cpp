@@ -271,7 +271,7 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
 			return {true, false};
     	}
     	AddNewResult(*potential_named_arg, new_str);
-  }
+  	}
 	else if ((*potential_named_arg).arg_type == ArgType::kFloat) {
 		float* arg_val = new float;
 		if(!IsValidFloat(argv[i+1])){
@@ -288,8 +288,8 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
 			return {true, false};
 		}
 		AddNewResult(*potential_named_arg, arg_val);  
-  }
-  else if ((*potential_named_arg).arg_type == ArgType::kInteger) {
+  	}
+  	else if ((*potential_named_arg).arg_type == ArgType::kInteger) {
 		int* arg_val = new int;
 		if(!IsValidInteger(argv[i+1])){
 			delete arg_val;
@@ -381,7 +381,6 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
   	}
 
   	if ((*potential_pos_arg).arg_type == ArgType::kChar) {
-
 		if((*potential_pos_arg).results.count_of_all_results==0){
 			char* result = static_cast<char*>((*potential_pos_arg).results.first_result);
 			strcpy(result, argv);
@@ -393,7 +392,6 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 			return {true, false};
 		}
 		AddNewResult(*potential_pos_arg, new_str);
-
   	} 
 	else if ((*potential_pos_arg).arg_type == ArgType::kFloat) {
 		if(!IsValidFloat(argv)){
@@ -427,8 +425,8 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 		}
 		AddNewResult(*potential_pos_arg, arg_val);
 
-  }
-  return {true, true};
+  	}
+  	return {true, true};
 }
 
 bool ValidateArgsAfterParsing(ArgumentParser& parser){
@@ -531,30 +529,30 @@ bool Parse(ArgumentParser& parser, int argc, const char* const* argv) {
 		if(!ValidateArgumentSize(parser, argv[i])){
 			return false;
 		}
-		ParseInfo IsFlagArg = ParseFlag(parser, argv, i);
-		if (IsFlagArg.IsParsed) {
+		ParseInfo is_flag_arg = ParseFlag(parser, argv, i);
+		if (is_flag_arg.IsParsed) {
 			continue;
 		}
 
-		ParseInfo IsSplittedNamedArg = ParseSplittedNamedArgument(parser, argc, argv, i);
-		if (IsSplittedNamedArg.IsParsed) {
-			if (!IsSplittedNamedArg.ValidationFuncResult) {
+		ParseInfo is_splitted_arg = ParseSplittedNamedArgument(parser, argc, argv, i);
+		if (is_splitted_arg.IsParsed) {
+			if (!is_splitted_arg.ValidationFuncResult) {
 				return false;
 			}
 			continue;
 		}
 
-		ParseInfo IsNamedWithEquals = ParseNamedArgumentWithEquals(parser, argv[i]);
-		if (IsNamedWithEquals.IsParsed) {
-			if (!IsNamedWithEquals.ValidationFuncResult) {
+		ParseInfo is_named_with_equals = ParseNamedArgumentWithEquals(parser, argv[i]);
+		if (is_named_with_equals.IsParsed) {
+			if (!is_named_with_equals.ValidationFuncResult) {
 				return false;
 			}
 			continue;
 		}
 
-		ParseInfo IsPosArg = ParsePosArgument(parser, argv[i]);
-		if (IsPosArg.IsParsed) {
-			if (!IsPosArg.ValidationFuncResult) {
+		ParseInfo is_pos_arg = ParsePosArgument(parser, argv[i]);
+		if (is_pos_arg.IsParsed) {
+			if (!is_pos_arg.ValidationFuncResult) {
 				return false;
 			}
 			continue;
