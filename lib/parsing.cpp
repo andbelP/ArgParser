@@ -4,9 +4,9 @@
 #include "validation.h"
 #include "argparser.h"
 
+
+
 namespace nargparse{
-
-
     
 #define IMPLEMENT_REALLOC_RESULTS_MEMORY(NAMED_OR_POS)                  \
   void ReallocResultsMemory(NAMED_OR_POS& argument) {                   \
@@ -345,6 +345,4 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
   	return {true, true};
 }
 
-
-
-}
+} // namespace nargparse
