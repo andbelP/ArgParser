@@ -1,3 +1,5 @@
+#pragma once
+
 #include "argparser.h"
 
 namespace nargparse {

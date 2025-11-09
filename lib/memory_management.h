@@ -1,4 +1,7 @@
+#pragma once
+
 #include "argparser.h"
+
 namespace nargparse {
 
 void AllocateMoreFlagsMemory(ArgumentParser &parser);
