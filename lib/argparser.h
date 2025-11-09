@@ -4,6 +4,8 @@
 
 namespace nargparse {
 
+constexpr size_t kDefaultMaxArgLength=1024;
+
 enum ParsingType {
   kNargsRequired,
   kNargsZeroOrMore,
@@ -62,6 +64,8 @@ struct PosArgument {
 
 struct ArgumentParser {
   const char *name_of_parser;
+  bool help_added;
+
   size_t max_arg_length;
 
   size_t count_of_flags;
@@ -78,9 +82,9 @@ struct ArgumentParser {
 };
 
 ArgumentParser CreateParser(const char *name_of_parser,
-                            const size_t max_arg_length);
+                            const size_t max_arg_length=kDefaultMaxArgLength);
 void FreeParser(ArgumentParser& parser);
-bool Parse(ArgumentParser &parser, int argc, const char **argv);
+bool Parse(ArgumentParser &parser, int argc, const char* const* argv);
 void AddFlag(ArgumentParser &parser, const char *short_flag,
              const char *long_flag, bool *result, const char *name_of_flag,
              bool default_value = false);
@@ -127,4 +131,6 @@ bool GetRepeated(ArgumentParser &parser, const char *name_of_arg,
                  int pos_of_arg, float *result);
 
 void AddHelp(ArgumentParser &parser);
+void PrintHelp(ArgumentParser &parser);
+
 } // namespace nargparse

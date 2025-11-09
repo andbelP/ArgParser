@@ -1,6 +1,7 @@
-#include "argparser.h"
-
+#include <iostream>
 #include <cstring>
+
+#include "argparser.h"
 
 namespace nargparse {
 
@@ -239,7 +240,7 @@ const char* ExtractNamedArgWithEqualsValue(const char* arg) {
   return arg;
 }
 
-ParseInfo ParseFlag(ArgumentParser& parser, const char** argv, int i) {
+ParseInfo ParseFlag(ArgumentParser& parser, const char* const* argv, int i) {
   Flag* potential_flag = FindFlag(parser, argv[i]);
   if (potential_flag == nullptr) {
     return {false, false};
@@ -249,7 +250,7 @@ ParseInfo ParseFlag(ArgumentParser& parser, const char** argv, int i) {
   return ParseInfo{true, true};
 }
 
-ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const char** argv, int& i) {
+ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const char* const* argv, int& i) {
 	NamedArgument* potential_named_arg = FindSplittedNamedArgument(parser, argv[i]);
   	if (potential_named_arg == nullptr) {
     	return {false, false};
@@ -445,23 +446,25 @@ bool ValidateArgsAfterParsing(ArgumentParser& parser){
 }  // namespace
 
 ArgumentParser CreateParser(const char* name_of_parser, const size_t max_arg_length) {
-  ArgumentParser parser;
-  parser.name_of_parser = name_of_parser;
-  parser.max_arg_length = max_arg_length;
+	ArgumentParser parser;
+	parser.help_added=false;
 
-  parser.count_of_pos_args = 0;
-  parser.count_of_flags = 0;
-  parser.count_of_named_args = 0;
+	parser.name_of_parser = name_of_parser;
+	parser.max_arg_length = max_arg_length;
 
-  parser.size_of_pos_args_array = 1;
-  parser.size_of_flags_array = 1;
-  parser.size_of_named_args_array = 1;
+	parser.count_of_pos_args = 0;
+	parser.count_of_flags = 0;
+	parser.count_of_named_args = 0;
 
-  parser.flags = new Flag[1];
-  parser.pos_args = new PosArgument[1];
-  parser.named_args = new NamedArgument[1];
+	parser.size_of_pos_args_array = 1;
+	parser.size_of_flags_array = 1;
+	parser.size_of_named_args_array = 1;
 
-  return parser;
+	parser.flags = new Flag[1];
+	parser.pos_args = new PosArgument[1];
+	parser.named_args = new NamedArgument[1];
+
+	return parser;
 }
 
 void FreeParser(ArgumentParser& parser) {
@@ -512,7 +515,7 @@ void FreeParser(ArgumentParser& parser) {
   	delete[] parser.pos_args;
 }
 
-bool Parse(ArgumentParser& parser, int argc, const char** argv) {
+bool Parse(ArgumentParser& parser, int argc, const char* const* argv) {
 	for (int i = 1; i < argc; ++i) {
 		if(!ValidateArgumentSize(parser, argv[i])){
 			return false;
@@ -677,6 +680,23 @@ IMPLEMENT_GET_REPEATED(int)
 
 IMPLEMENT_GET_REPEATED(float)
 
-void AddHelp(ArgumentParser& parser) {}
+void AddHelp(ArgumentParser& parser) {
+	parser.help_added=true;
+}
+
+void PrintHelp(ArgumentParser& parser) {
+	if(!parser.help_added){
+		return;
+	}
+	std::cout << "Named arguments:\n" << "Count of named arguments = " << parser.count_of_named_args<<"\n\n";
+	for(int i = 0; i < parser.count_of_named_args; i++){
+		std::cout << parser.named_args[i].short_arg << ' ' << parser.named_args[i].long_arg << ' ' << parser.named_args[i].name_of_arg<<"\n";
+	}
+	std::cout<<"\n====================================\n\n\n\n\n";
+	std::cout << "Positional arguments:\n" << "Count of positional arguments = " << parser.count_of_named_args<<"\n";
+	for(int i = 0; i < parser.count_of_pos_args; i++){
+		std::cout << parser.pos_args[i].name_of_arg<<"\n";
+	}
+}
 
 }  // namespace nargparse
