@@ -42,7 +42,7 @@ int StringToInt(const char* str) {
   }
   return result;
 }
-bool StartsWith(const char* start, const char* str) {
+bool StartsWith(const char* str, const char* start) {
   if (strlen(start) > strlen(str)) {
     return false;
   }
@@ -116,6 +116,12 @@ IMPLEMENT_REALLOC_RESULTS_MEMORY(PosArgument);
 IMPLEMENT_ADD_NEW_RESULT(NamedArgument)
 
 IMPLEMENT_ADD_NEW_RESULT(PosArgument)
+bool ValidateArgumentSize(ArgumentParser& parser, const char* arg){
+	if(strlen(arg)>=parser.max_arg_length){
+		return false;
+	}
+	return true;
+}
 
 void AllocateMoreFlagsMemory(ArgumentParser& parser) {
   Flag* new_flags = new Flag[parser.size_of_flags_array * 2];
@@ -249,7 +255,7 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
     	return {false, false};
   	}
 
-  	if (i >= (argc - 1)) {
+  	if (i >= (argc - 1) || !ValidateArgumentSize(parser, argv[i+1])) {
     	return {true, false};
   	}	
 
@@ -372,6 +378,7 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 			strcpy(result, argv);
 		}
 		char* new_str = new char[strlen(argv)+1];
+		strcpy(new_str, argv);
 		if ((*potential_pos_arg).valid_func.void_valid_func != nullptr && !(*potential_pos_arg).valid_func.void_valid_func(new_str)) {
 			return {true, false};
 		}
@@ -412,6 +419,29 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
   return {true, true};
 }
 
+bool ValidateArgsAfterParsing(ArgumentParser& parser){
+	int count_of_results;
+	for (int i = 0; i < parser.count_of_named_args; i++){
+		count_of_results = parser.named_args[i].results.count_of_all_results;
+		if ((parser.named_args[i].type == ParsingType::kNargsRequired || parser.named_args[i].type == ParsingType::kNargsOneOrMore) && count_of_results == 0){
+			return false;
+		}
+		if(parser.named_args[i].type == ParsingType::kNargsRequired && count_of_results>1){
+			return false;
+		}
+	}
+	for (int i = 0; i < parser.count_of_pos_args; i++){
+		count_of_results = parser.pos_args[i].results.count_of_all_results;
+		if ((parser.pos_args[i].type == ParsingType::kNargsRequired || parser.pos_args[i].type == ParsingType::kNargsOneOrMore) && count_of_results == 0){
+			return false;
+		}
+		if(parser.pos_args[i].type == ParsingType::kNargsRequired && count_of_results>1){
+			return false;
+		}
+	}
+	return true;
+}
+
 }  // namespace
 
 ArgumentParser CreateParser(const char* name_of_parser, const size_t max_arg_length) {
@@ -434,45 +464,90 @@ ArgumentParser CreateParser(const char* name_of_parser, const size_t max_arg_len
   return parser;
 }
 
-void FreeParser(ArgumentParser parser) {
-  delete[] parser.flags;
-  delete[] parser.named_args;
-  delete[] parser.pos_args;
+void FreeParser(ArgumentParser& parser) {
+	for(int i = 0; i < parser.count_of_named_args; i++){
+		for(int j  = 0; j < parser.named_args[i].results.count_of_all_results; j++){
+			switch(parser.named_args[i].arg_type){
+				case(ArgType::kChar): {
+					delete static_cast<char*>(parser.named_args[i].results.all_results[j]);
+					break;
+				}
+				case(ArgType::kFloat): {
+					delete static_cast<float*>(parser.named_args[i].results.all_results[j]);
+					break;
+				}
+				case(ArgType::kInteger): {
+					delete static_cast<int*>(parser.named_args[i].results.all_results[j]);
+					break;
+				}
+			}
+		}
+		delete[] parser.named_args[i].results.all_results;
+	}
+
+	for(int i = 0; i < parser.count_of_pos_args; i++){
+		for(int j  = 0; j < parser.pos_args[i].results.count_of_all_results; j++){
+			switch(parser.named_args[i].arg_type){
+				case(ArgType::kChar): {
+					delete static_cast<char*>(parser.pos_args[i].results.all_results[j]);
+					break;
+				}
+				case(ArgType::kFloat): {
+					delete static_cast<float*>(parser.pos_args[i].results.all_results[j]);
+					break;
+				}
+				case(ArgType::kInteger): {
+					delete static_cast<int*>(parser.pos_args[i].results.all_results[j]);
+					break;
+				}
+			}
+		}
+		delete[] parser.pos_args[i].results.all_results;
+	}
+
+
+
+  	delete[] parser.flags;
+  	delete[] parser.named_args;
+  	delete[] parser.pos_args;
 }
 
 bool Parse(ArgumentParser& parser, int argc, const char** argv) {
-  for (int i = 1; i < argc; ++i) {
-    ParseInfo IsFlagArg = ParseFlag(parser, argv, i);
-    if (IsFlagArg.IsParsed) {
-      continue;
-    }
+	for (int i = 1; i < argc; ++i) {
+		if(!ValidateArgumentSize(parser, argv[i])){
+			return false;
+		}
+		ParseInfo IsFlagArg = ParseFlag(parser, argv, i);
+		if (IsFlagArg.IsParsed) {
+			continue;
+		}
 
-    ParseInfo IsSplittedNamedArg = ParseSplittedNamedArgument(parser, argc, argv, i);
-    if (IsSplittedNamedArg.IsParsed) {
-      if (!IsSplittedNamedArg.ValidationFuncResult) {
-        return false;
-      }
+		ParseInfo IsSplittedNamedArg = ParseSplittedNamedArgument(parser, argc, argv, i);
+		if (IsSplittedNamedArg.IsParsed) {
+			if (!IsSplittedNamedArg.ValidationFuncResult) {
+				return false;
+			}
+			continue;
+		}
 
-      continue;
-    }
+		ParseInfo IsNamedWithEquals = ParseNamedArgumentWithEquals(parser, argv[i]);
+		if (IsNamedWithEquals.IsParsed) {
+			if (!IsNamedWithEquals.ValidationFuncResult) {
+				return false;
+			}
+			continue;
+		}
 
-    ParseInfo IsNamedWithEquals = ParseNamedArgumentWithEquals(parser, argv[i]);
-    if (IsNamedWithEquals.IsParsed) {
-      if (!IsNamedWithEquals.ValidationFuncResult) {
-        return false;
-      }
-      continue;
-    }
-
-    ParseInfo IsPosArg = ParsePosArgument(parser, argv[i]);
-    if (IsPosArg.IsParsed) {
-      if (!IsPosArg.ValidationFuncResult) {
-        return false;
-      }
-      continue;
-    }
-  }
-  return true;
+		ParseInfo IsPosArg = ParsePosArgument(parser, argv[i]);
+		if (IsPosArg.IsParsed) {
+			if (!IsPosArg.ValidationFuncResult) {
+				return false;
+			}
+			continue;
+		}
+	}
+	
+	return ValidateArgsAfterParsing(parser);
 }
 
 void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_flag, bool* result, const char* comment, bool default_value) {
@@ -490,7 +565,7 @@ void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_fl
 }
 
 #define IMPLEMENT_ADD_POS_ARGUMENT(TYPE, ARG_TYPE, FUNC_TYPE)                \
-  void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
+void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
                    const char* name_of_arg, ParsingType type,                \
                    bool (*valid_func)(const FUNC_TYPE& value),               \
                    const char* valid_comment) {                              \
@@ -537,6 +612,8 @@ IMPLEMENT_ADD_NAMED_ARGUMENT(float, kFloat, float)
 
 IMPLEMENT_ADD_NAMED_ARGUMENT(void, kChar, char* const)
 
+IMPLEMENT_ADD_POS_ARGUMENT(float, kFloat, float)
+
 IMPLEMENT_ADD_POS_ARGUMENT(void, kChar, char* const)
 
 IMPLEMENT_ADD_POS_ARGUMENT(int, kInteger, int)
@@ -553,14 +630,14 @@ int GetRepeatedCount(ArgumentParser& parser, const char* name_of_arg) {
 	return -1;\
 }
 
-bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg, void* result) {\
+bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg,const char** result) {\
     NamedArgument* potential_named_arg = FindNamedArgumentByName(parser, name_of_arg);\
     if(potential_named_arg!=nullptr){\
         if((*potential_named_arg).results.count_of_all_results <= pos_of_arg){\
             return false;\
         }\
         char* arg_val = static_cast<char*>((*potential_named_arg).results.all_results[pos_of_arg]);\
-        strcpy(static_cast<char*>(result),arg_val);\
+        *result = arg_val;
         return true;\
     }\
     PosArgument* potential_pos_arg = FindPosArgumentByName(parser, name_of_arg);\
@@ -569,8 +646,8 @@ bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg
             return false;\
         }\
         char* arg_val = static_cast<char*>((*potential_pos_arg).results.all_results[pos_of_arg]);\
-        strcpy(static_cast<char*>(result),arg_val);\
-        return true;\
+        *result = arg_val;\
+		return true;\
     }\
     return false;\
 }

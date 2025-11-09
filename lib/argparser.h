@@ -79,7 +79,7 @@ struct ArgumentParser {
 
 ArgumentParser CreateParser(const char *name_of_parser,
                             const size_t max_arg_length);
-void FreeParser(ArgumentParser parser);
+void FreeParser(ArgumentParser& parser);
 bool Parse(ArgumentParser &parser, int argc, const char **argv);
 void AddFlag(ArgumentParser &parser, const char *short_flag,
              const char *long_flag, bool *result, const char *name_of_flag,
@@ -93,7 +93,7 @@ void AddArgument(ArgumentParser &parser, const char *short_arg,
 
 void AddArgument(ArgumentParser &parser, const char *short_arg,
                  const char *long_arg, float *result, const char *name_of_arg,
-                 ParsingType type, bool (*valid_func)(const float &value),
+                 ParsingType type, bool (*valid_func)(const float &value)=nullptr,
                  const char *valid_comment = nullptr);
 
 void AddArgument(ArgumentParser &parser, const char *short_arg,
@@ -107,6 +107,11 @@ void AddArgument(ArgumentParser &parser, void *result, const char *name_of_arg,
                  bool (*valid_func)(const char *const &value) = nullptr,
                  const char *valid_comment = nullptr);
 
+void AddArgument(ArgumentParser &parser, float *result, const char *name_of_arg,
+                 ParsingType type = kNargsRequired,
+                 bool (*valid_func)(const float &value) = nullptr,
+                 const char *valid_comment = nullptr);
+
 void AddArgument(ArgumentParser &parser, int *result, const char *name_of_arg,
                  ParsingType type = kNargsRequired,
                  bool (*valid_func)(const int &value) = nullptr,
@@ -115,7 +120,7 @@ void AddArgument(ArgumentParser &parser, int *result, const char *name_of_arg,
 int GetRepeatedCount(ArgumentParser &parser, const char *name_of_arg);
 
 bool GetRepeated(ArgumentParser &parser, const char *name_of_arg,
-                 int pos_of_arg, void *result);
+                 int pos_of_arg, const char** result);
 bool GetRepeated(ArgumentParser &parser, const char *name_of_arg,
                  int pos_of_arg, int *result);
 bool GetRepeated(ArgumentParser &parser, const char *name_of_arg,
