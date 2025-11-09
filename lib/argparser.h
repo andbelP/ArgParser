@@ -26,6 +26,11 @@ struct Flag {
   bool default_value;
 };
 
+struct ParseInfo {
+  bool IsParsed;
+  bool ValidationFuncResult;
+};
+
 enum class ArgType { kInteger, kFloat, kChar };
 
 struct NamedArgument {
