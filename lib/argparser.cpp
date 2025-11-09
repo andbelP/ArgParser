@@ -490,7 +490,7 @@ void FreeParser(ArgumentParser& parser) {
 
 	for(int i = 0; i < parser.count_of_pos_args; i++){
 		for(int j  = 0; j < parser.pos_args[i].results.count_of_all_results; j++){
-			switch(parser.named_args[i].arg_type){
+			switch(parser.pos_args[i].arg_type){
 				case(ArgType::kChar): {
 					delete static_cast<char*>(parser.pos_args[i].results.all_results[j]);
 					break;
