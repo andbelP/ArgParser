@@ -95,9 +95,7 @@ namespace {
     for (int i = 0; i < argument.results.count_of_all_results; i++) {   \
       new_arr[i] = argument.results.all_results[i];                     \
     }                                                                   \
-    if(argument.results.all_results!=nullptr){\
-      delete[] argument.results.all_results;                              \
-    }\
+    delete[] argument.results.all_results;                              \
     argument.results.all_results = new_arr;       \
 	argument.results.size_of_all_results=new_size;\
   }
