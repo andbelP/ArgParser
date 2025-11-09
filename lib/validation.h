@@ -1,14 +1,13 @@
 #include "argparser.h"
 
-namespace nargparse{
+namespace nargparse {
 
+bool ValidateArgumentSize(ArgumentParser &parser, const char *arg);
 
-bool ValidateArgumentSize(ArgumentParser& parser, const char* arg);
+bool ValidateArgsAfterParsing(ArgumentParser &parser);
 
-bool ValidateArgsAfterParsing(ArgumentParser& parser);
+bool IsValidInteger(const char *arg);
 
-bool IsValidInteger(const char* arg);
+bool IsValidFloat(const char *arg);
 
-bool IsValidFloat(const char* arg);
-
-}
+} // namespace nargparse
