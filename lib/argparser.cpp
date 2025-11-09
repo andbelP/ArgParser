@@ -269,13 +269,15 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
       		strcpy(result, arg_val); 
     	}
     	if ((*potential_named_arg).valid_func.void_valid_func != nullptr && !(*potential_named_arg).valid_func.void_valid_func(new_str)) {
-        	return {true, false};
+        	delete[] new_str;
+			return {true, false};
     	}
     	AddNewResult(*potential_named_arg, new_str);
   }
 	else if ((*potential_named_arg).arg_type == ArgType::kFloat) {
 		float* arg_val = new float;
 		if(!IsValidFloat(argv[i+1])){
+			delete arg_val;
 			return {true,false};
 		}
 		*arg_val = StringToFloat(argv[i+1]);
@@ -284,6 +286,7 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
 			*result = *arg_val;
 		}
 		if ((*potential_named_arg).valid_func.float_valid_func !=nullptr && !(*potential_named_arg).valid_func.float_valid_func(*arg_val)) {
+			delete arg_val;
 			return {true, false};
 		}
 		AddNewResult(*potential_named_arg, arg_val);  
@@ -291,6 +294,7 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
   else if ((*potential_named_arg).arg_type == ArgType::kInteger) {
 		int* arg_val = new int;
 		if(!IsValidInteger(argv[i+1])){
+			delete arg_val;
 			return {true,false};
 		}
 		*arg_val=StringToInt(argv[i+1]);
@@ -299,6 +303,7 @@ ParseInfo ParseSplittedNamedArgument(ArgumentParser& parser, int argc, const cha
 			*result = *arg_val;
 		}
 		if ((*potential_named_arg).valid_func.int_valid_func != nullptr && !(*potential_named_arg).valid_func.int_valid_func(*arg_val)) {
+			delete arg_val;
 			return {true, false};
 		}
 		AddNewResult(*potential_named_arg, arg_val);
@@ -324,6 +329,7 @@ ParseInfo ParseNamedArgumentWithEquals(ArgumentParser& parser, const char* argv)
 			strcpy(result, arg_val); 
 		}
 		if ((*potential_named_arg_with_equals).valid_func.void_valid_func != nullptr && !(*potential_named_arg_with_equals).valid_func.void_valid_func(new_str)) {
+			delete[] new_str;
 			return {true, false};
 		}
 		AddNewResult(*potential_named_arg_with_equals, new_str);
@@ -333,6 +339,7 @@ ParseInfo ParseNamedArgumentWithEquals(ArgumentParser& parser, const char* argv)
 
     	float* arg_val = new float;
 		if(!IsValidFloat(ExtractNamedArgWithEqualsValue(argv))){
+			delete arg_val;
 			return {true,false};
 		}
     	*arg_val = StringToFloat(ExtractNamedArgWithEqualsValue(argv));
@@ -341,7 +348,8 @@ ParseInfo ParseNamedArgumentWithEquals(ArgumentParser& parser, const char* argv)
         	*result = *arg_val;
     	}
     	if ((*potential_named_arg_with_equals).valid_func.float_valid_func !=nullptr && !(*potential_named_arg_with_equals).valid_func.float_valid_func(*arg_val)) {
-        	return {true, false};
+        	delete arg_val;
+			return {true, false};
     	}
     	AddNewResult(*potential_named_arg_with_equals, arg_val);  
 
@@ -351,6 +359,7 @@ ParseInfo ParseNamedArgumentWithEquals(ArgumentParser& parser, const char* argv)
     	int* arg_val = new int;
     	*arg_val=StringToInt(ExtractNamedArgWithEqualsValue(argv));
 		if(!IsValidInteger(ExtractNamedArgWithEqualsValue(argv))){
+			delete arg_val;
 			return {true,false};
 		}
     	if((*potential_named_arg_with_equals).results.count_of_all_results==0){
@@ -359,7 +368,8 @@ ParseInfo ParseNamedArgumentWithEquals(ArgumentParser& parser, const char* argv)
     	}
 
     	if ((*potential_named_arg_with_equals).valid_func.int_valid_func != nullptr && !(*potential_named_arg_with_equals).valid_func.int_valid_func(*arg_val)) {
-      		return {true, false};
+      		delete arg_val;
+			return {true, false};
     	}
     	AddNewResult(*potential_named_arg_with_equals, arg_val);
   	}
@@ -381,6 +391,7 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 		char* new_str = new char[strlen(argv)+1];
 		strcpy(new_str, argv);
 		if ((*potential_pos_arg).valid_func.void_valid_func != nullptr && !(*potential_pos_arg).valid_func.void_valid_func(new_str)) {
+			delete[] new_str;
 			return {true, false};
 		}
 		AddNewResult(*potential_pos_arg, new_str);
@@ -397,6 +408,7 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 			*result = *arg_val;
 		}
 		if ((*potential_pos_arg).valid_func.float_valid_func != nullptr && !(*potential_pos_arg).valid_func.float_valid_func(*arg_val)) {
+			delete arg_val;
 			return {true, false};
 		}
 		AddNewResult(*potential_pos_arg, arg_val);
@@ -412,6 +424,7 @@ ParseInfo ParsePosArgument(ArgumentParser& parser, const char* argv) {
 			*result = *arg_val;
 		}
 		if ((*potential_pos_arg).valid_func.int_valid_func != nullptr && !(*potential_pos_arg).valid_func.int_valid_func(*arg_val)) {
+			delete arg_val;
 			return {true, false};
 		}
 		AddNewResult(*potential_pos_arg, arg_val);
