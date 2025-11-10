@@ -7,7 +7,10 @@
 
 
 namespace nargparse{
-    
+   
+namespace{
+
+
 #define IMPLEMENT_REALLOC_RESULTS_MEMORY(NAMED_OR_POS)                  \
   void ReallocResultsMemory(NAMED_OR_POS& argument) {                   \
     size_t new_size = (argument.results.size_of_all_results == 0) ? 1 : (argument.results.size_of_all_results * 2); \
@@ -84,7 +87,7 @@ bool StartsWith(const char* str, const char* start) {
   return true;
 }
 
-
+} // namespace
 
 
 

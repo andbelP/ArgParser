@@ -13,7 +13,6 @@ bool IsDigit(char a){
 	return a<='9' && a>='0'; 
 }
 
-
 } // namespace
 
 

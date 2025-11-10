@@ -12,6 +12,7 @@
 
 namespace nargparse {
 
+
 ArgumentParser CreateParser(const char* name_of_parser, const size_t max_arg_length) {
 	ArgumentParser parser;
 	parser.help_added=false;
@@ -34,6 +35,7 @@ ArgumentParser CreateParser(const char* name_of_parser, const size_t max_arg_len
 	return parser;
 }
 
+
 void FreeParser(ArgumentParser& parser) {
 	for(int i = 0; i < parser.count_of_named_args; i++){
 		for(int j  = 0; j < parser.named_args[i].results.count_of_all_results; j++){
@@ -53,6 +55,8 @@ void FreeParser(ArgumentParser& parser) {
 			}
 		}
 		delete[] parser.named_args[i].results.all_results;
+		delete[] parser.named_args[i].short_arg;
+		delete[] parser.named_args[i].long_arg;
 	}
 
 	for(int i = 0; i < parser.count_of_pos_args; i++){
@@ -76,11 +80,16 @@ void FreeParser(ArgumentParser& parser) {
 	}
 
 
-
+	for(int i = 0; i < parser.count_of_flags; i++){
+		delete[] parser.flags[i].comment;
+		delete[] parser.flags[i].short_flag;
+		delete[] parser.flags[i].long_flag;
+	}
   	delete[] parser.flags;
   	delete[] parser.named_args;
   	delete[] parser.pos_args;
 }
+
 
 bool Parse(ArgumentParser& parser, int argc, const char* const* argv) {
 	for (int i = 1; i < argc; ++i) {
@@ -120,6 +129,7 @@ bool Parse(ArgumentParser& parser, int argc, const char* const* argv) {
 	return ValidateArgsAfterParsing(parser);
 }
 
+
 void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_flag, bool* result, const char* comment, bool default_value) {
   *result = default_value;
   if (parser.count_of_flags == parser.size_of_flags_array) {
@@ -127,8 +137,23 @@ void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_fl
   }
   parser.flags[parser.count_of_flags].short_flag = short_flag;
   parser.flags[parser.count_of_flags].long_flag = long_flag;
+  if(short_flag!=nullptr){
+	char* temp = new char[strlen(short_flag)+1];
+	strcpy(temp, short_flag);
+	parser.flags[parser.count_of_flags].short_flag=temp;
+  }
+  if(long_flag!=nullptr){
+	char* temp = new char[strlen(long_flag)+1];
+	strcpy(temp, long_flag);
+	parser.flags[parser.count_of_flags].long_flag=temp;
+  }
   parser.flags[parser.count_of_flags].result = result;
   parser.flags[parser.count_of_flags].comment = comment;
+  if(comment!=nullptr){
+	char* temp = new char[strlen(comment)+1];
+	strcpy(temp, comment);
+	parser.flags[parser.count_of_flags].comment=temp;
+  }
   parser.flags[parser.count_of_flags].default_value = default_value;
 
   parser.count_of_flags++;
@@ -156,6 +181,7 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
     parser.count_of_pos_args++;                                              \
   }
 
+
 #define IMPLEMENT_ADD_NAMED_ARGUMENT(TYPE, ARG_TYPE, FUNC_TYPE)                \
   void AddArgument(                                                            \
       ArgumentParser& parser, const char* short_arg, const char* long_arg,     \
@@ -163,10 +189,25 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
       bool (*valid_func)(const FUNC_TYPE& value), const char* valid_comment) { \
     if (parser.count_of_named_args == parser.size_of_named_args_array) {       \
       AllocateMoreNamedArgsMemory(parser);                                     \
-    }                                                                          \
-    parser.named_args[parser.count_of_named_args].short_arg = short_arg;       \
-    parser.named_args[parser.count_of_named_args].long_arg = long_arg;         \
-    parser.named_args[parser.count_of_named_args].name_of_arg = name_of_arg;   \
+    }       \
+	parser.named_args[parser.count_of_named_args].short_arg = short_arg;\
+	parser.named_args[parser.count_of_named_args].long_arg = long_arg;         \
+	parser.named_args[parser.count_of_named_args].name_of_arg = name_of_arg;   \
+	if(short_arg!=nullptr){\
+    	char* temp = new char[strlen(short_arg)+1];\
+    	strcpy(temp, short_arg);\
+    	parser.named_args[parser.count_of_named_args].short_arg = temp;\
+	}\
+	if(long_arg!=nullptr){\
+		char* temp = new char[strlen(long_arg)+1];         \
+		strcpy(temp, long_arg);\
+    	parser.named_args[parser.count_of_named_args].long_arg = temp;         \
+	}\
+	if(name_of_arg!=nullptr){\
+		char* temp = new char[strlen(name_of_arg)+1];   \
+		strcpy(temp, name_of_arg);\
+    	parser.named_args[parser.count_of_named_args].name_of_arg = temp;   \
+	}\
     parser.named_args[parser.count_of_named_args].results.first_result = result_value;\
     parser.named_args[parser.count_of_named_args].results.count_of_all_results=0;\
     parser.named_args[parser.count_of_named_args].results.size_of_all_results=0;\
@@ -178,17 +219,24 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
     parser.count_of_named_args++;                                              \
   }
 
+
 IMPLEMENT_ADD_NAMED_ARGUMENT(int, kInteger, int)
+
 
 IMPLEMENT_ADD_NAMED_ARGUMENT(float, kFloat, float)
 
+
 IMPLEMENT_ADD_NAMED_ARGUMENT(void, kChar, char* const)
+
 
 IMPLEMENT_ADD_POS_ARGUMENT(float, kFloat, float)
 
+
 IMPLEMENT_ADD_POS_ARGUMENT(void, kChar, char* const)
 
+
 IMPLEMENT_ADD_POS_ARGUMENT(int, kInteger, int)
+
 
 int GetRepeatedCount(ArgumentParser& parser, const char* name_of_arg) {
     NamedArgument* potential_named_arg = FindNamedArgumentByName(parser, name_of_arg);\
@@ -201,6 +249,7 @@ int GetRepeatedCount(ArgumentParser& parser, const char* name_of_arg) {
 	}\
 	return -1;\
 }
+
 
 bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg,const char** result) {\
     NamedArgument* potential_named_arg = FindNamedArgumentByName(parser, name_of_arg);\
@@ -224,6 +273,7 @@ bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg
     return false;\
 }
 
+
 #define IMPLEMENT_GET_REPEATED(TYPE)  \
 bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg, TYPE* result) {\
     NamedArgument* potential_named_arg = FindNamedArgumentByName(parser, name_of_arg);\
@@ -245,13 +295,17 @@ bool GetRepeated(ArgumentParser& parser, const char* name_of_arg, int pos_of_arg
     return false;\
 }
 
+
 IMPLEMENT_GET_REPEATED(int)
 
+
 IMPLEMENT_GET_REPEATED(float)
+
 
 void AddHelp(ArgumentParser& parser) {
 	parser.help_added=true;
 }
+
 
 void PrintHelp(ArgumentParser& parser) {
 	if(!parser.help_added){
@@ -267,5 +321,6 @@ void PrintHelp(ArgumentParser& parser) {
 		std::cout << parser.pos_args[i].name_of_arg<<"\n";
 	}
 }
+
 
 }  // namespace nargparse
