@@ -57,6 +57,8 @@ void FreeParser(ArgumentParser& parser) {
 		delete[] parser.named_args[i].results.all_results;
 		delete[] parser.named_args[i].short_arg;
 		delete[] parser.named_args[i].long_arg;
+		delete[] parser.named_args[i].name_of_arg;
+		delete[] parser.named_args[i].valid_comment;
 	}
 
 	for(int i = 0; i < parser.count_of_pos_args; i++){
@@ -77,6 +79,7 @@ void FreeParser(ArgumentParser& parser) {
 			}
 		}
 		delete[] parser.pos_args[i].results.all_results;
+		delete[] parser.pos_args[i].valid_comment;
 	}
 
 
@@ -131,32 +134,32 @@ bool Parse(ArgumentParser& parser, int argc, const char* const* argv) {
 
 
 void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_flag, bool* result, const char* comment, bool default_value) {
-  *result = default_value;
-  if (parser.count_of_flags == parser.size_of_flags_array) {
-    AllocateMoreFlagsMemory(parser);
-  }
-  parser.flags[parser.count_of_flags].short_flag = short_flag;
-  parser.flags[parser.count_of_flags].long_flag = long_flag;
-  if(short_flag!=nullptr){
-	char* temp = new char[strlen(short_flag)+1];
-	strcpy(temp, short_flag);
-	parser.flags[parser.count_of_flags].short_flag=temp;
-  }
-  if(long_flag!=nullptr){
-	char* temp = new char[strlen(long_flag)+1];
-	strcpy(temp, long_flag);
-	parser.flags[parser.count_of_flags].long_flag=temp;
-  }
-  parser.flags[parser.count_of_flags].result = result;
-  parser.flags[parser.count_of_flags].comment = comment;
-  if(comment!=nullptr){
-	char* temp = new char[strlen(comment)+1];
-	strcpy(temp, comment);
-	parser.flags[parser.count_of_flags].comment=temp;
-  }
-  parser.flags[parser.count_of_flags].default_value = default_value;
+  	*result = default_value;
+  	if (parser.count_of_flags == parser.size_of_flags_array) {
+		AllocateMoreFlagsMemory(parser);
+  	}
+  	parser.flags[parser.count_of_flags].short_flag = short_flag;
+  	parser.flags[parser.count_of_flags].long_flag = long_flag;
+  	if(short_flag!=nullptr){
+		char* temp = new char[strlen(short_flag)+1];
+		strcpy(temp, short_flag);
+		parser.flags[parser.count_of_flags].short_flag=temp;
+  	}
+  	if(long_flag!=nullptr){
+		char* temp = new char[strlen(long_flag)+1];
+		strcpy(temp, long_flag);
+		parser.flags[parser.count_of_flags].long_flag=temp;
+  	}
+  	parser.flags[parser.count_of_flags].result = result;
+  	parser.flags[parser.count_of_flags].comment = comment;
+  	if(comment!=nullptr){
+		char* temp = new char[strlen(comment)+1];
+		strcpy(temp, comment);
+		parser.flags[parser.count_of_flags].comment=temp;
+  	}
+  	parser.flags[parser.count_of_flags].default_value = default_value;
 
-  parser.count_of_flags++;
+  	parser.count_of_flags++;
 }
 
 
@@ -167,15 +170,25 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
                    bool (*valid_func)(const FUNC_TYPE& value),               \
                    const char* valid_comment) {                              \
     if (parser.count_of_pos_args == parser.size_of_pos_args_array) {         \
-      AllocateMorePosArgsMemory(parser);                                     \
+      	AllocateMorePosArgsMemory(parser);                                     \
     }                                                                        \
     parser.pos_args[parser.count_of_pos_args].name_of_arg = name_of_arg;     \
+	if(name_of_arg != nullptr){\
+    	char* temp = new char[strlen(name_of_arg)+1];\
+    	strcpy(temp, name_of_arg);\
+    	parser.pos_args[parser.count_of_pos_args].name_of_arg = temp;\
+	}\
     parser.pos_args[parser.count_of_pos_args].results.first_result = result_value;\
     parser.pos_args[parser.count_of_pos_args].results.count_of_all_results=0;\
     parser.pos_args[parser.count_of_pos_args].results.size_of_all_results=0;\
     parser.pos_args[parser.count_of_pos_args].results.all_results=nullptr;\
     parser.pos_args[parser.count_of_pos_args].valid_func.TYPE##_valid_func = valid_func;\
     parser.pos_args[parser.count_of_pos_args].valid_comment = valid_comment; \
+	if(valid_comment != nullptr){\
+    	char* temp = new char[strlen(valid_comment)+1];\
+    	strcpy(temp, valid_comment);\
+    	parser.pos_args[parser.count_of_pos_args].valid_comment = temp;\
+	}\
     parser.pos_args[parser.count_of_pos_args].type = type;                   \
     parser.pos_args[parser.count_of_pos_args].arg_type = ArgType::ARG_TYPE;  \
     parser.count_of_pos_args++;                                              \
@@ -188,22 +201,22 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
       TYPE* result_value, const char* name_of_arg, ParsingType type,           \
       bool (*valid_func)(const FUNC_TYPE& value), const char* valid_comment) { \
     if (parser.count_of_named_args == parser.size_of_named_args_array) {       \
-      AllocateMoreNamedArgsMemory(parser);                                     \
+      	AllocateMoreNamedArgsMemory(parser);                                     \
     }       \
 	parser.named_args[parser.count_of_named_args].short_arg = short_arg;\
 	parser.named_args[parser.count_of_named_args].long_arg = long_arg;         \
 	parser.named_args[parser.count_of_named_args].name_of_arg = name_of_arg;   \
-	if(short_arg!=nullptr){\
+	if(short_arg != nullptr){\
     	char* temp = new char[strlen(short_arg)+1];\
     	strcpy(temp, short_arg);\
     	parser.named_args[parser.count_of_named_args].short_arg = temp;\
 	}\
-	if(long_arg!=nullptr){\
+	if(long_arg != nullptr){\
 		char* temp = new char[strlen(long_arg)+1];         \
 		strcpy(temp, long_arg);\
     	parser.named_args[parser.count_of_named_args].long_arg = temp;         \
 	}\
-	if(name_of_arg!=nullptr){\
+	if(name_of_arg != nullptr){\
 		char* temp = new char[strlen(name_of_arg)+1];   \
 		strcpy(temp, name_of_arg);\
     	parser.named_args[parser.count_of_named_args].name_of_arg = temp;   \
@@ -214,6 +227,11 @@ void AddArgument(ArgumentParser& parser, TYPE* result_value,               \
 	parser.named_args[parser.count_of_named_args].results.all_results=nullptr;\
     parser.named_args[parser.count_of_named_args].valid_func.TYPE##_valid_func = valid_func;\
     parser.named_args[parser.count_of_named_args].valid_comment = valid_comment;\
+	if(valid_comment != nullptr){\
+		char* temp = new char[strlen(valid_comment)+1];         \
+		strcpy(temp, valid_comment);\
+    	parser.named_args[parser.count_of_named_args].valid_comment = temp;         \
+	}\
     parser.named_args[parser.count_of_named_args].type = type;                 \
     parser.named_args[parser.count_of_named_args].arg_type = ArgType::ARG_TYPE;\
     parser.count_of_named_args++;                                              \
