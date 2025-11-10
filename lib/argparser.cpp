@@ -79,6 +79,7 @@ void FreeParser(ArgumentParser& parser) {
 			}
 		}
 		delete[] parser.pos_args[i].results.all_results;
+		delete[] parser.pos_args[i].name_of_arg;
 		delete[] parser.pos_args[i].valid_comment;
 	}
 
