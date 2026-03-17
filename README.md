@@ -69,3 +69,19 @@
 | 3 | 01.12.25 00:00 | 0.5 | deadline_3 |
 
 Максимальное количество баллов - 12
+
+
+
+# Подключение библиотеки
+
+```
+include(FetchContent)
+
+FetchContent_Declare(
+  argparser
+  GIT_REPOSITORY https://github.com/ТВОЙ_ЛОГИН/ТВОЙ_РЕПО.git
+  GIT_TAG main
+)
+
+FetchContent_MakeAvailable(argparser)
+```
